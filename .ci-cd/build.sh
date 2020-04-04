@@ -48,6 +48,7 @@ function test() {
         alf.algorithms.algorithm_test \
         alf.algorithms.ddpg_algorithm_test \
         alf.algorithms.diayn_algorithm_test \
+        alf.algorithms.generator_test \
         alf.algorithms.memory_test \
         alf.algorithms.mi_estimator_test \
         alf.algorithms.ppo_algorithm_test \

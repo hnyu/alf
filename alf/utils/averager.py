@@ -19,9 +19,10 @@ import torch
 import torch.nn as nn
 
 import alf
+from alf.nest.utils import get_outer_rank
 from alf.tensor_specs import TensorSpec
 from alf.utils.data_buffer import DataBuffer
-from alf.nest.utils import get_outer_rank
+from alf.utils.tensor_utils import to_tensor
 
 
 def average_outer_dims(tensor, spec):
@@ -80,8 +81,7 @@ class WindowAverager(nn.Module):
         """
 
         def _get(buf):
-            n = torch.max(buf.current_size,
-                          torch.as_tensor(1)).to(torch.float32)
+            n = torch.max(buf.current_size, to_tensor(1)).to(torch.float32)
             return torch.sum(buf.get_all(), dim=0) * (1. / n)
 
         return alf.nest.map_structure(_get, self._buf)
@@ -124,10 +124,10 @@ class ScalarWindowAverager(WindowAverager):
 class EMAverager(nn.Module):
     """Class for exponential moving average.
 
-    x_t = (1-update_rate)* x_{t-1} + update_Rate * x
+        :math:'x_t = (1-update_rate) \cdot x_{t-1} + update_Rate \cdot x'
     The average is corrected by a mass as x_t / mass_t, and the mass is
     calculated as:
-    mass_t = (1-update_rate) * mass_{t-1} + update_rate
+        :math:'mass_t = (1-update_rate) \cdot mass_{t-1} + update_rate'
 
     Note that update_rate can be a fixed floating number or a Variable. If it is
     a Variable, the update_rate can be changed by the user.
@@ -158,7 +158,7 @@ class EMAverager(nn.Module):
 
         self._average = alf.nest.map_structure(_create_variable, tensor_spec)
         # mass can be shared by different structure elements
-        self.register_buffer("_mass", torch.zeros((), dtype=torch.float64))
+        self.register_buffer("_mass", torch.zeros((), dtype=torch.float32))
 
     def update(self, tensor):
         """Update the average.
@@ -171,11 +171,11 @@ class EMAverager(nn.Module):
         """
         alf.nest.map_structure(
             lambda average, t, spec: average.add_(
-                torch.as_tensor(self._update_rate, dtype=t.dtype) * (
+                to_tensor(self._update_rate, dtype=t.dtype) * (
                     average_outer_dims(t, spec) - average)), self._average,
             tensor, self._tensor_spec)
         self._mass.add_(
-            torch.as_tensor(self._update_rate, dtype=torch.float64) *
+            to_tensor(self._update_rate, dtype=torch.float32) *
             (1 - self._mass))
 
     def get(self):
@@ -187,7 +187,7 @@ class EMAverager(nn.Module):
         return alf.nest.map_structure(
             lambda average: average / torch.max(
                 self._mass.to(average.dtype),
-                torch.as_tensor(self._update_rate, dtype=average.dtype)),
+                to_tensor(self._update_rate, dtype=average.dtype)),
             self._average)
 
     def average(self, tensor):
@@ -246,11 +246,11 @@ class AdaptiveAverager(EMAverager):
             speed (float): speed of updating mean and variance.
             name (str): name of this averager
         """
-        update_rate = torch.ones((), dtype=torch.float64)
+        update_rate = torch.ones((), dtype=torch.float32)
         super().__init__(tensor_spec, update_rate)
         self.register_buffer("_update_ema_rate", update_rate)
-        self.register_buffer("_total_steps",
-                             torch.as_tensor(speed, dtype=torch.int64))
+        self.register_buffer("_total_steps", to_tensor(
+            speed, dtype=torch.int64))
         self._speed = speed
 
     def update(self, tensor):
@@ -263,7 +263,7 @@ class AdaptiveAverager(EMAverager):
             None
         """
         self._update_ema_rate.fill_(
-            self._speed / self._total_steps.to(torch.float64))
+            self._speed / self._total_steps.to(torch.float32))
         self._total_steps.add_(1)
         super().update(tensor)
 
