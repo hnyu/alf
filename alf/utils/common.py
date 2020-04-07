@@ -309,7 +309,7 @@ def scale_transformer(observation, scale, dtype=torch.float32, fields=None):
 @gin.configurable
 def reward_clipping(r, minmax=(-1, 1)):
     """
-    Clamp immediate rewards to the range [`min`, `max`].
+    Clamp immediate rewards to the range :math:`[min, max]`.
 
     Can be used as a reward shaping function passed to an algorithm
     (e.g. ActorCriticAlgorithm).
@@ -595,7 +595,7 @@ def active_action_target_entropy(active_action_portion=0.2, min_entropy=0.3):
     to be effective.
 
     Args:
-        active_action_portion (float): a number in (0, 1]. Ideally, this value
+        active_action_portion (float): a number in :math:`(0, 1]`. Ideally, this value
             should be greater than `1/num_actions`. If it's not, it will be
             ignored.
         min_entropy (float): the minimum possible entropy. If the auto-computed

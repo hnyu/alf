@@ -29,15 +29,15 @@ from alf.utils import common
 def get_invertable(cls):
     """A helper function to turn on the cache mechanism for transformation.
     This is useful as some transformations (say g) may not be able to provide
-    an accurate inversion therefore the difference between x and g_inv(g(x)) is
+    an accurate inversion therefore the difference between x and :math:`g^{-1}(g(x))` is
     large. This could lead to unstable training in practice.
-    For a torch transformation y=g(x), when cache_size is set to one, the latest
-    value for (x, y) is cached and will be used later for future computations.
-    E.g. for inversion, a call to g_inv(y) will return x, solving the inversion
+    For a torch transformation :math:`y=g(x)`, when cache_size is set to one, the latest
+    value for :math:`(x, y)` is cached and will be used later for future computations.
+    E.g. for inversion, a call to :math:`g^{-1}(y)` will return x, solving the inversion
     error issue mentioned above.
     Note that in the case of having a chain of transformations (G), all the element
     transformations need to turn on the cache to ensure the composite transformation
-    G satisfy: x=G_inv(G(x)).
+    G satisfy: :math:`x=G^{-1}(G(x))`.
     """
 
     class NewCls(cls):
@@ -69,27 +69,27 @@ class Softsign(td.Transform):
 
     def _inverse(self, y):
         """
-        y > 0:
-            y = x / (1+x) => x = y / (1 - y)
-        y < 0:
-            y = x / (1-x) => x = y / (1 + y)
+        :math:`y > 0`:
+            :math:`y = \frac{x}{1+x}\Rightarrow x = \frac{y}{1 - y}`
+        :math:`y < 0`:
+            :math:`y = \frac{x}{1-x}\Rightarrow x = \frac{y}{1 + y}`
         """
         return torch.where(y > 0, y / (1 - y), y / (1 + y))
 
     def log_abs_det_jacobian(self, x, y):
         """
-        x > 0:
-            y = x / (1+x) => dy/dx = -1/(1+x)^2
-        x < 0:
-            y = x / (1-x) => dy/dx = 1/(1-x)^2
+        :math:`x > 0`:
+            :math:`y = \frac{x}{1+x}\Rightarrow \frac{dy}{dx} = \frac{-1}{(1+x)^2}`
+        :math:`x < 0`:
+            :math:`y = \frac{x}{1-x}\Rightarrow \frac{dy}{dx} = \frac{1}{(1-x)^2}`
         """
         return -2. * torch.log(1 + x.abs())
 
 
 @gin.configurable
 class StableTanh(td.Transform):
-    """Invertable transformation (bijector) that computes `Y = tanh(X)`,
-    therefore `Y in (-1, 1)`.
+    """Invertable transformation (bijector) that computes :math:`Y = tanh(X)`,
+    therefore :math:`Y \in (-1, 1)`.
 
     This can be achieved by an affine transform of the Sigmoid transformation,
     i.e., it is equivalent to applying a list of transformations sequentially:
@@ -161,7 +161,7 @@ class OUProcess(nn.Module):
         environments with momentum.
 
         The temporal update equation is:
-        `x_next = (1 - damping) * x + N(0, std_dev)`
+        :math:`x_{next} = (1 - damping) \cdot x + N(0, \sigma^2)`
 
         Args:
             initial_value (Tensor): Initial value of the process.
@@ -590,7 +590,7 @@ def entropy_with_fallback(distributions):
     There are two situations:
     * entropy() is implemented. entropy is same as entropy_for_gradient.
     * entropy() is not implemented. We use sampling to calculate entropy. The
-        unbiased estimator for entropy is -log(p(x)). However, the gradient of
+        unbiased estimator for entropy is :math:`-\log(p(x))`. However, the gradient of
         -log(p(x)) is not an unbiased estimator of the gradient of entropy. So
         we also calculate a value whose gradient is an unbiased estimator of
         the gradient of entropy. See estimated_entropy() for detail.

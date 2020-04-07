@@ -124,10 +124,10 @@ class ScalarWindowAverager(WindowAverager):
 class EMAverager(nn.Module):
     """Class for exponential moving average.
 
-        :math:'x_t = (1-update_rate) \cdot x_{t-1} + update_Rate \cdot x'
-    The average is corrected by a mass as x_t / mass_t, and the mass is
+        :math:`x_t = (1-update_rate) \cdot x_{t-1} + update_Rate \cdot x`
+    The average is corrected by a mass as :math:`\frac{x_t}{mass_t}`, and the :math:`mass_t` is
     calculated as:
-        :math:'mass_t = (1-update_rate) \cdot mass_{t-1} + update_rate'
+        :math:`mass_t = (1-update_rate) \cdot mass_{t-1} + update_rate`
 
     Note that update_rate can be a fixed floating number or a Variable. If it is
     a Variable, the update_rate can be changed by the user.
@@ -230,7 +230,7 @@ class AdaptiveAverager(EMAverager):
 
     This averager gives higher weight to more recent samples for calculating the
     average. Roughly speaking, the weight for each sample at time t is roughly
-    proportional to (t/T)^(speed-1), where T is the current time step. See
+    proportional to :math:`(\frac{t}{T})^(speed-1)`, where T is the current time step. See
     docs/streaming_averaging_amd_sampling.py for detail.
     """
 
